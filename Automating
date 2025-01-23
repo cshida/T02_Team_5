@@ -1,0 +1,56 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
+import logging
+import os
+import kaggle
+
+logging.basicConfig(filename='/path/to/your_logfile.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+def download_kaggle_data():
+    # Set up logging within the function to capture log per execution
+    logger = logging.getLogger(__name__)
+    try:
+        # Authenticate using the Kaggle API credentials
+        os.environ['KAGGLE_USERNAME'] = "maximchong"
+        os.environ['KAGGLE_KEY'] = "fb5672d68716e14c2b28f1c39eb0657a"
+        kaggle.api.authenticate()
+
+        # Define the dataset's URL slug
+        dataset_slug = 'obinnaiheanachor/wisabi-bank-dataset'
+
+        # Specify the download path and whether to unzip the files
+        path_to_download = '/path/to/download'  # Adjust this path as needed
+        unzip_files = True
+
+        # Download the dataset
+        kaggle.api.dataset_download_files(dataset_slug, path=path_to_download, unzip=unzip_files)
+        logger.info("Dataset downloaded successfully.")
+    except Exception as e:
+        logger.error("Failed to download dataset: %s", str(e))
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2025, 1, 1),  # Adjust the start date to a suitable value
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'kaggle_data_download',
+    default_args=default_args,
+    description='DAG for downloading Kaggle data',
+    schedule='* * * * *',  # Run once a day, adjust as needed
+    catchup=False
+)
+
+# Set up the task
+download_task = PythonOperator(
+    task_id='download_kaggle_data',
+    python_callable=download_kaggle_data,
+    dag=dag
+)
