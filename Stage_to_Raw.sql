@@ -18,4 +18,25 @@ FILE_FORMAT = (
     TIMESTAMP_FORMAT=AUTO
 )
 ON_ERROR=ABORT_STATEMENT;
+
+TRUNCATE TABLE "TRUSTBANKDATA"."RAW"."BRANCH_TABLE";
+-- For more details, see: https://docs.snowflake.com/en/sql-reference/sql/truncate-table
+COPY INTO "TRUSTBANKDATA"."RAW"."BRANCH_TABLE"
+FROM (
+    SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+    FROM '@"TRUSTBANKDATA"."RAW"."NEW_CSV_STAGE"'
+)
+FILES = ('Branch table.csv.gz')
+FILE_FORMAT = (
+    TYPE=CSV,
+    SKIP_HEADER=-1,
+    FIELD_DELIMITER=',',
+    TRIM_SPACE=TRUE,
+    FIELD_OPTIONALLY_ENCLOSED_BY='"',
+    REPLACE_INVALID_CHARACTERS=TRUE,
+    DATE_FORMAT=AUTO,
+    TIME_FORMAT=AUTO,
+    TIMESTAMP_FORMAT=AUTO
+)
+ON_ERROR=ABORT_STATEMENT;
 -- For more details, see: https://docs.snowflake.com/en/sql-reference/sql/copy-into-table
