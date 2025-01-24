@@ -8,7 +8,7 @@ kaggle.api.authenticate()
 dataset_slug = 'obinnaiheanachor/wisabi-bank-dataset'
 
 # Specify the path where you want to download the dataset and whether to unzip the files
-path_to_download = 'c:/Users/maxim/OneDrive/Desktop/ADO Assignment File'  # Change this to your desired path
+path_to_download = 'c:/Users/ethan/OneDrive/Desktop/TrustBankRawData/'  # Change this to your desired path
 unzip_files = True
 
 # Download the dataset
