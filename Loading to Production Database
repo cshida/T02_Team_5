@@ -1,11 +1,5 @@
 import os
-import pandas as pd
 import snowflake.connector
-
-# Function to sanitize column names
-def sanitize_column_name(name):
-    name = name.strip().replace(" ", "_").replace("(", "").replace(")", "").replace("%", "")
-    return name.upper()
 
 # Establish connection to Snowflake
 conn = snowflake.connector.connect(
@@ -18,77 +12,27 @@ conn = snowflake.connector.connect(
 
 cursor = conn.cursor()
 
-# Create RAW schema if it doesn't exist
-try:
-    cursor.execute("CREATE SCHEMA IF NOT EXISTS RAW;")
-    print("Schema RAW created or already exists.")
-    
-    # Set the schema to RAW for the session
-    cursor.execute("USE SCHEMA RAW;")
-    print("Schema set to RAW.")
-except Exception as e:
-    print(f"An error occurred while creating or using the RAW schema: {e}")
+# Set the schema to RAW for the session
+cursor.execute("USE SCHEMA RAW;")
 
-# Directory containing your CSV files
+# Directory containing your files
 data_directory = r'C:/Users/ethan/OneDrive/Desktop/bankdataset'
 
-# Function to infer Snowflake data types from pandas dtypes
-def infer_snowflake_type(dtype):
-    if pd.api.types.is_integer_dtype(dtype):
-        return "NUMBER"
-    elif pd.api.types.is_float_dtype(dtype):
-        return "FLOAT"
-    elif pd.api.types.is_datetime64_any_dtype(dtype):
-        return "TIMESTAMP_NTZ"
-    elif pd.api.types.is_bool_dtype(dtype):
-        return "BOOLEAN"
-    else:
-        return "VARCHAR(255)"
+# Stage name, ensure it is fully qualified if within a specific schema
+stage_name = "RAW.NEW_CSV_STAGE"
 
 try:
     for filename in os.listdir(data_directory):
-        if filename.endswith(".csv"):
-            # File and table setup
+        # Check file extensions for CSV, ZIP, and JSON
+        if filename.endswith(".csv") or filename.endswith(".zip") or filename.endswith(".json"):
             file_path = os.path.join(data_directory, filename).replace("\\", "/")  # Normalize file path
-            table_name = filename[:-4].replace(" ", "_").upper()  # Use consistent uppercase table name
-
-            # Load CSV into a pandas DataFrame
-            df = pd.read_csv(file_path, encoding="utf-8-sig")
-
-            # Sanitize column names
-            df.columns = [sanitize_column_name(col) for col in df.columns]
-
-            # Infer column types for Snowflake
-            column_definitions = [
-                f'"{col}" {infer_snowflake_type(dtype)}'
-                for col, dtype in zip(df.columns, df.dtypes)
-            ]
-
-            # Create table dynamically in RAW schema
-            create_table_query = f"CREATE OR REPLACE TABLE RAW.{table_name} ("
-            create_table_query += ", ".join(column_definitions)
-            create_table_query += ");"
-
-            print(f"Creating table: RAW.{table_name}")
-            print(f"CREATE TABLE Query: {create_table_query}")
-            cursor.execute(create_table_query)
-
-            # Upload file to stage
-            stage_name = f"@RAW.%{table_name}"  # Include RAW schema explicitly
-            put_command = f"PUT 'file://{file_path}' {stage_name};"
+            
+            # PUT command to upload file to the new stage
+            put_command = f"PUT 'file://{file_path}' @{stage_name} AUTO_COMPRESS=TRUE;"
             print(f"Uploading file to stage: {put_command}")
             cursor.execute(put_command)
 
-            # Copy data into the table
-            copy_into_query = f"""
-            COPY INTO RAW.{table_name}
-            FROM {stage_name}
-            FILE_FORMAT = (TYPE = 'CSV' FIELD_OPTIONALLY_ENCLOSED_BY='"' SKIP_HEADER=1)
-            ON_ERROR = 'CONTINUE';
-            """
-            print(f"Copying data into table: {copy_into_query}")
-            cursor.execute(copy_into_query)
-            print(f"Data successfully loaded into RAW.{table_name}")
+            print(f"File {filename} uploaded successfully to stage {stage_name}.")
 
 except Exception as e:
     print(f"An error occurred: {e}")
