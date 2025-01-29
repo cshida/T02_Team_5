@@ -296,4 +296,36 @@ FROM natural_keys nk
 JOIN analytics.dt_dim_customer dc ON dc.CardHolderID = nk.CardHolderID
 JOIN analytics.dt_dim_atm da ON da.LocationID = nk.LocationID
 GROUP BY dc.CardHolderID, da.LocationID, nk.transaction_type_name;
+CREATE OR REPLACE DYNAMIC TABLE dt_fact_transactions
+TARGET_LAG = 'DOWNSTREAM'
+WAREHOUSE = trustbank_dev_warehouse
+REFRESH_MODE = FULL
+INITIALIZE = ON_CREATE
+AS
+WITH natural_keys AS (
+    SELECT
+        t.TransactionID,
+        t.CardHolderID,
+        t.TransactionTypeID,
+        t.Datetimestart,
+        t.datetimeend,
+        t.TransactionAmount,
+        t.locationid,
+        tl.TRANSACTIONTYPENAME AS transaction_type_name
+    FROM harmonized.transactions t
+    JOIN harmonized.transactions_type_lookup tl ON t.TransactionTypeID = tl.TransactionTypeID
+)
+
+SELECT
+    dc.CardHolderID,  -- Include CardHolderID in the SELECT statement
+    da.LocationID as ATM_Location_ID,
+    -- Measures
+    COUNT(nk.TransactionID) AS total_transactions,
+    SUM(nk.TransactionAmount) AS total_transaction_amount,
+    AVG(nk.TransactionAmount) AS avg_transaction_amount,
+    nk.transaction_type_name
+FROM natural_keys nk
+JOIN analytics.dt_dim_customer dc ON dc.CardHolderID = nk.CardHolderID
+JOIN analytics.dt_dim_atm da ON da.LocationID = nk.LocationID
+GROUP BY dc.CardHolderID, da.LocationID, nk.transaction_type_name;
 
