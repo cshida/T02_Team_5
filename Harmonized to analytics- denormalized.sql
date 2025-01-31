@@ -74,7 +74,8 @@ SELECT
     Installation_Date AS installation_date,
     Maintenance_Date AS maintenance_date,
     Operational_Status AS operational_status,
-    Cash_Deposit_Available AS cash_deposit_available
+    Cash_Deposit_Available AS cash_deposit_available,
+    SUM(No_of_ATMs) OVER (ORDER BY Installation_Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS rolling_total
 FROM harmonized.atm_lookup;
 
 CREATE OR REPLACE TABLE dt_dim_calendar
