@@ -17,7 +17,9 @@ CREATE OR REPLACE PROCEDURE populate_schema_metadata(schema_name STRING)
 RETURNS STRING
 LANGUAGE JAVASCRIPT
 AS
+
 $$
+
     // Step 1: Fetch all tables in the schema
     var tables = [];
     var stmt = snowflake.createStatement({
@@ -101,7 +103,17 @@ $$;
 
 
 
--- Execute the procedure
-CALL populate_schema_metadata('ERROR_LOGS');
+CREATE OR REPLACE STREAM error_logs_stream
+ON table error_logs.branch_error;
 
-SELECT * FROM error_logs.schema_metadata;
+CREATE OR REPLACE TASK process_error_log_task
+WAREHOUSE = 'TRUSTBANK_REPORTING_WAREHOUSE'
+SCHEDULE = '1 HOUR'
+WHEN SYSTEM$STREAM_HAS_DATA('error_logs_stream')
+AS
+BEGIN
+    TRUNCATE TABLE error_logs.schema_metadata;
+    CALL populate_schema_metadata('ERROR_LOGS');
+END;
+
+ALTER TASK process_error_log_task RESUME;
