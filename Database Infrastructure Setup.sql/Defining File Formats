@@ -1,0 +1,17 @@
+-- Defining File Formats and Staging for Schemas--
+
+CREATE OR REPLACE FILE FORMAT TRUSTBANKDATA.RAW.csv_ff
+type = 'csv',
+field_delimiter = ',';
+
+CREATE OR REPLACE FILE FORMAT TRUSTBANKDATA.Harmonized.csv_ff
+type = 'csv',
+field_delimiter = ',';
+
+CREATE OR REPLACE STAGE TRUSTBANKDATA.HARMONIZED.staging
+    comment = "Staging For Cleaned and Transformed Trust Bank Data"
+    FILE_FORMAT = TRUSTBANKDATA.Harmonized.csv_ff;
+    
+CREATE OR REPLACE STAGE TRUSTBANKDATA.Raw.raw_staging
+    comment = "Staging for Raw Trust Bank Data"
+    FILE_FORMAT = TRUSTBANKDATA.Raw.csv_ff;
