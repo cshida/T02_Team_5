@@ -12,6 +12,13 @@ CREATE OR REPLACE TABLE error_logs.schema_metadata (
     "Last_Updated" TIMESTAMP,
     "Action_Group" STRING
 );
+CREATE TABLE IF NOT EXISTS ERROR_LOGS.error_logs_summary (
+    error_logs_table VARCHAR PRIMARY KEY,
+    load_row_count INT,
+    error_row_count INT,
+    total_row_count INT,
+    error_percentage DECIMAL(10,2)
+);
 
 CREATE OR REPLACE PROCEDURE populate_schema_metadata(schema_name STRING)
 RETURNS STRING
@@ -100,6 +107,97 @@ $$
     return 'Schema metadata populated for schema: ' + SCHEMA_NAME;
 $$;
 
+CREATE OR REPLACE PROCEDURE ERROR_LOGS.UPDATE_ERROR_LOGS_SUMMARY()
+    RETURNS STRING
+    LANGUAGE JAVASCRIPT
+    EXECUTE AS CALLER
+AS
+$$
+try {
+    // Step 1: Create the summary table if it doesn't exist
+    var createTableSQL = `
+        CREATE TABLE IF NOT EXISTS ERROR_LOGS.error_logs_summary (
+            error_logs_table STRING,
+            load_row_count INT,
+            error_row_count INT,
+            total_row_count INT,
+            error_percentage DECIMAL(5,2)
+        );
+    `;
+    var stmt = snowflake.createStatement({sqlText: createTableSQL});
+    stmt.execute();
+
+    // Step 2: Delete all existing data in the summary table to ensure fresh data
+    var deleteSQL = "DELETE FROM ERROR_LOGS.error_logs_summary;";
+    stmt = snowflake.createStatement({sqlText: deleteSQL});
+    stmt.execute();
+
+    // Step 3: Use MERGE to insert the new data, as there's no existing data anymore
+    var mergeSQL = `
+        MERGE INTO ERROR_LOGS.error_logs_summary target
+        USING (
+            SELECT 
+                m.error_logs_table AS error_logs_table,
+                m.load_row_count,
+                COALESCE(e.error_row_count, 0) AS error_row_count,
+                (m.load_row_count + COALESCE(e.error_row_count, 0)) AS total_row_count,
+                CASE 
+                    WHEN m.load_row_count = 0 THEN 0
+                    ELSE (COALESCE(e.error_row_count, 0) * 100.0) / m.load_row_count
+                END AS error_percentage
+            FROM (
+                -- Load history mapping
+                SELECT
+                    CASE
+                        WHEN TABLE_NAME = 'ATM_LOCATION_LOOKUP' THEN 'ATM_LOCATION_LOOKUP_ERROR'
+                        WHEN TABLE_NAME = 'BRANCH_LOOKUP' THEN 'BRANCH_LOOKUP_ERROR'
+                        WHEN TABLE_NAME = 'BRANCH_PERFORMANCE' THEN 'BRANCH_PERFORMANCE_ERROR'
+                        WHEN TABLE_NAME = 'BRANCH_TABLE' THEN 'BRANCH_ERROR'
+                        WHEN TABLE_NAME = 'CALENDAR_LOOKUP' THEN 'CALENDER_LOOKUP_ERROR'
+                        WHEN TABLE_NAME = 'CUSTOMERLOOKUP' THEN 'CUSTOMER_LOOKUP_ERROR'
+                        WHEN TABLE_NAME = 'CUSTOMER_DEMOGRAPHICS' THEN 'CUSTOMER_DEMOGRAPHICS_ERROR'
+                        WHEN TABLE_NAME IN ('ENUGU_TRANSACTIONS', 'FCT_TRANSACTIONS', 'KANO_TRANSACTIONS', 'LAGOS_TRANSACTIONS', 'RIVERS_TRANSACTIONS') 
+                             THEN 'TRANSACTIONS_ERROR'
+                        WHEN TABLE_NAME = 'GENERATED_INVESTMENT_DATA' THEN 'INVESTMENTS_ERROR'
+                        WHEN TABLE_NAME = 'HOUR_LOOKUP' THEN 'HOUR_LOOKUP_ERROR'
+                        WHEN TABLE_NAME = 'LOAN' THEN 'LOAN_ERROR'
+                        ELSE NULL
+                    END AS error_logs_table,
+                    SUM(ROW_COUNT) AS load_row_count
+                FROM INFORMATION_SCHEMA.LOAD_HISTORY
+                GROUP BY 1
+            ) m
+            LEFT JOIN (
+                -- Get error row counts
+                SELECT TABLE_NAME, SUM(ROW_COUNT) AS error_row_count
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = 'ERROR_LOGS'
+                GROUP BY TABLE_NAME
+            ) e
+            ON m.error_logs_table = e.TABLE_NAME
+            WHERE m.error_logs_table IS NOT NULL
+        ) new_data
+        ON target.error_logs_table = new_data.error_logs_table
+        WHEN MATCHED THEN
+            UPDATE SET 
+                target.load_row_count = new_data.load_row_count,
+                target.error_row_count = new_data.error_row_count,
+                target.total_row_count = new_data.total_row_count,
+                target.error_percentage = new_data.error_percentage
+        WHEN NOT MATCHED THEN
+            INSERT (error_logs_table, load_row_count, error_row_count, total_row_count, error_percentage)
+            VALUES (new_data.error_logs_table, new_data.load_row_count, new_data.error_row_count, new_data.total_row_count, new_data.error_percentage);
+    `;
+
+    stmt = snowflake.createStatement({sqlText: mergeSQL});
+    stmt.execute();
+
+    return 'Procedure executed successfully, all data replaced.';
+} catch (err) {
+    return 'Error: ' + err.message;
+}
+$$;
+
 
 
 
@@ -114,6 +212,7 @@ AS
 BEGIN
     TRUNCATE TABLE error_logs.schema_metadata;
     CALL populate_schema_metadata('ERROR_LOGS');
+    call ERROR_LOGS.UPDATE_ERROR_LOGS_SUMMARY();
 END;
 
 ALTER TASK process_error_log_task RESUME;
