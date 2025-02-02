@@ -4,4 +4,5 @@ CREATE or REPLACE Schema TRUSTBANKDaTa.harmonized;
 CREATE OR REPLACE SCHEMA trustbankdata.error_logs;
 CREATE or REPLACE Schema trustbankdata.analytics;
 
+--Show--
 SHOW SCHEMAS IN DATABASE trustbankdata;
