@@ -1,38 +1,51 @@
 import os
 import snowflake.connector
 
-# Establish connection to Snowflake
+# Snowflake connection
 conn = snowflake.connector.connect(
     user='GECKO',
     password='3ddie1aU',
     account='BOB84066',
-    warehouse='GECKO_wh',
+    warehouse='GECKO_WH',
     database='TRUSTBANKDATA'
 )
 
 cursor = conn.cursor()
 
-# Set the schema to RAW for the session
+# Set the schema
 cursor.execute("USE SCHEMA RAW;")
 
-# Directory containing your files
+# Directory containing your local dataset files
 data_directory = r'C:/Users/ethan/OneDrive/Desktop/bankdataset'
 
-# Stage name, ensure it is fully qualified if within a specific schema
+# Define stage and target table
 stage_name = "RAW.NEW_CSV_STAGE"
+table_name = "RAW.BANK_DATA"  # Replace with your actual target table
 
 try:
     for filename in os.listdir(data_directory):
-        # Check file extensions for CSV, ZIP, and JSON
-        if filename.endswith(".csv") or filename.endswith(".zip") or filename.endswith(".json"):
+        # Check for supported file types
+        if filename.endswith((".csv", ".zip", ".json")):
             file_path = os.path.join(data_directory, filename).replace("\\", "/")  # Normalize file path
             
-            # PUT command to upload file to the new stage
-            put_command = f"PUT 'file://{file_path}' @{stage_name} AUTO_COMPRESS=TRUE;"
+            # PUT command to upload file
+            put_command = f"PUT 'file://{file_path}' @{stage_name} AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
             print(f"Uploading file to stage: {put_command}")
             cursor.execute(put_command)
 
             print(f"File {filename} uploaded successfully to stage {stage_name}.")
+
+    # **Replace table with new data from stage**
+    create_replace_table = f"""
+    CREATE OR REPLACE TABLE {table_name} AS 
+    SELECT * FROM {stage_name};
+    """
+    cursor.execute(create_replace_table)
+    print(f"Table {table_name} replaced with new data.")
+
+    # **Optional: Remove files from stage after loading**
+    cursor.execute(f"REMOVE @{stage_name};")
+    print(f"All staged files in {stage_name} removed.")
 
 except Exception as e:
     print(f"An error occurred: {e}")
