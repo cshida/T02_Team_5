@@ -112,3 +112,17 @@ WHERE
     QUERY_TEXT LIKE '%ALTER%' AND QUERY_TEXT LIKE '%HARMONIZED%'
 ORDER BY 
     START_TIME DESC;
+
+-- Materialized view
+
+CREATE MATERIALIZED VIEW TRUSTBANKDATA.HARMONIZED.VW_TRANSACTION_SUMMARY
+AS
+SELECT 
+    DATE_TRUNC('day', t.datetimestart) AS transaction_day,
+    t.locationid,
+    SUM(t.transactionamount) AS total_amount,
+    COUNT(*) AS total_transactions
+FROM 
+    TRUSTBANKDATA.HARMONIZED.TRANSACTIONS t
+GROUP BY 
+    DATE_TRUNC('day', t.datetimestart), t.locationid;
