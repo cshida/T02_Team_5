@@ -1,0 +1,8 @@
+use warehouse trustbank_loading_warehouse
+
+CREATE OR REPLACE TABLE TRUSTBANKDATA.HARMONIZED.SYSTEM_HEALTH_LOGS (
+    CHECK_TYPE VARCHAR(255),
+    CHECK_TIMESTAMP TIMESTAMP_NTZ,
+    RESULT_COUNT NUMBER,
+    ADDITIONAL_INFO VARCHAR(1000)  -- Optional, for any additional details or metrics
+);
