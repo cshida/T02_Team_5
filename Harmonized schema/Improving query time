@@ -1,0 +1,40 @@
+-- Alter the TRANSACTIONS table to add a clustering key
+ALTER TABLE TRANSACTIONS CLUSTER BY (datetimestart);
+
+-- Indexing and Clustering--
+ALTER TABLE TRUSTBANKDATA.HARMONIZED.TRANSACTIONS
+CLUSTER BY (DATETIMESTART, CARDHOLDERID, LOCATIONID);
+
+--This table likely experiences queries filtered by transaction dates, cardholder IDs, or location IDs.(Ran below to test)
+
+ALTER TABLE TRUSTBANKDATA.HARMONIZED.LOAN
+CLUSTER BY (CARDHOLDERID, LOAN_REPAYMENT_STATUS);
+--Loan data is typically accessed by cardholder ID, loan status, or specific loan IDs.
+
+ALTER TABLE TRUSTBANKDATA.HARMONIZED.CUSTOMER_DEMO
+CLUSTER BY (AGE_GROUP, MARITAL_STATUS);
+--Customer demographics are frequently queried by various demographic details, potentially for segmentation or targeted marketing.
+
+use warehouse trustbank_dev_warehouse;
+-- To Test --
+-- Before Clustering--
+ALTER TABLE TRUSTBANKDATA.HARMONIZED.TRANSACTIONS DROP CLUSTERING KEY;
+
+SELECT * FROM TRUSTBANKDATA.HARMONIZED.TRANSACTIONS;
+
+SELECT QUERY_TEXT, EXECUTION_TIME, BYTES_SCANNED
+FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION())
+WHERE QUERY_ID = last_query_id();
+
+-- Clustering Index--
+ALTER TABLE TRUSTBANKDATA.HARMONIZED.TRANSACTIONS
+CLUSTER BY (DATETIMESTART, CARDHOLDERID, LOCATIONID)
+
+--After Clustering--
+SELECT * FROM TRUSTBANKDATA.HARMONIZED.TRANSACTIONS;
+
+SELECT QUERY_TEXT, EXECUTION_TIME, BYTES_SCANNED
+FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION())
+WHERE QUERY_ID = last_query_id();
+
+--  decline in execution time
