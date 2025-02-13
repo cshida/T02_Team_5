@@ -296,7 +296,7 @@ BEGIN
     FILES = ('branch_lookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -316,7 +316,7 @@ BEGIN
     FILES = ('Branch table.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -336,7 +336,7 @@ BEGIN
     FILES = ('atm_location lookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -357,7 +357,7 @@ BEGIN
         FILES = ('Branch_performance.csv.gz')
         FILE_FORMAT = (
             TYPE=CSV,
-            SKIP_HEADER=-1,
+            SKIP_HEADER=1,
             FIELD_DELIMITER=',',
             TRIM_SPACE=TRUE,
             FIELD_OPTIONALLY_ENCLOSED_BY='"',
