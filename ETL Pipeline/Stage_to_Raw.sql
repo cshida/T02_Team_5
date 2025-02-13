@@ -4,26 +4,7 @@ LANGUAGE SQL
 AS
 $$
 BEGIN
-    -- Truncate and load data into rivers transactions table
-    TRUNCATE TABLE "TRUSTBANKDATA"."RAW"."RIVERS_TRANSACTIONS";
-    COPY INTO "TRUSTBANKDATA"."RAW"."RIVERS_TRANSACTIONS"
-    FROM (
-        SELECT $1, $2, $3, $4, $5, $6, $7
-        FROM '@"TRUSTBANKDATA"."RAW"."NEW_CSV_STAGE"'
-    )
-    FILES = ('rivers_transactions.csv.gz')
-    FILE_FORMAT = (
-        TYPE=CSV,
-        SKIP_HEADER=1,
-        FIELD_DELIMITER=',',
-        TRIM_SPACE=TRUE,
-        FIELD_OPTIONALLY_ENCLOSED_BY='"',
-        REPLACE_INVALID_CHARACTERS=TRUE,
-        DATE_FORMAT=AUTO,
-        TIME_FORMAT=AUTO,
-        TIMESTAMP_FORMAT=AUTO
-    )
-    ON_ERROR=ABORT_STATEMENT;
+
     -- Truncate and load data into kano transactions table
     TRUNCATE TABLE "TRUSTBANKDATA"."RAW"."KANO_TRANSACTIONS";
     COPY INTO "TRUSTBANKDATA"."RAW"."KANO_TRANSACTIONS"
