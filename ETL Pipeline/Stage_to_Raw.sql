@@ -75,7 +75,7 @@ BEGIN
     FILES = ('generated_investment_data.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -95,7 +95,7 @@ BEGIN
     FILES = ('fct_transactions.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -115,7 +115,7 @@ BEGIN
     FILES = ('enugu_transactions.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -175,7 +175,7 @@ BEGIN
     FILES = ('calendar lookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -195,7 +195,7 @@ BEGIN
     FILES = ('transaction_type lookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
