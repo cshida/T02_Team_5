@@ -14,7 +14,7 @@ BEGIN
     FILES = ('rivers_transactions.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -34,7 +34,7 @@ BEGIN
     FILES = ('kano_transactions.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -54,7 +54,7 @@ BEGIN
     FILES = ('hour lookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -74,7 +74,7 @@ BEGIN
     FILES = ('Branch_performance.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -154,7 +154,7 @@ BEGIN
     FILES = ('customer_demographics.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
@@ -174,7 +174,7 @@ BEGIN
     FILES = ('customerlookup.csv.gz')
     FILE_FORMAT = (
         TYPE=CSV,
-        SKIP_HEADER=-1,
+        SKIP_HEADER=1,
         FIELD_DELIMITER=',',
         TRIM_SPACE=TRUE,
         FIELD_OPTIONALLY_ENCLOSED_BY='"',
